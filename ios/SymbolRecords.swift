@@ -120,10 +120,39 @@ enum AnimationDirection: String, Enumerable {
   case down
 }
 
+enum ReplaceTransition: String, Enumerable {
+  case downUp
+  case offUp
+  case upUp
+}
+
+enum RotationDirection: String, Enumerable {
+  case clockwise
+  case counterClockwise
+}
+
+enum BreatheStyle: String, Enumerable {
+  case plain
+  case pulse
+}
+
+enum WiggleAxis: String, Enumerable {
+  case up
+  case down
+  case left
+  case right
+  case forward
+  case backward
+}
+
 enum AnimationType: String, Enumerable {
   case bounce
   case pulse
   case scale
+  case replace
+  case rotate
+  case breathe
+  case wiggle
 }
 
 internal struct AnimationSpec: Record {
@@ -138,16 +167,53 @@ internal struct AnimationEffect: Record {
   @Field var type: AnimationType = .bounce
   @Field var wholeSymbol: Bool?
   @Field var direction: AnimationDirection?
+  @Field var byLayer: Bool?
+  @Field var replaceTransition: ReplaceTransition?
+  @Field var useMagicReplace: Bool?
+  @Field var magicFallbackTransition: ReplaceTransition?
+  @Field var rotateDirection: RotationDirection?
+  @Field var breatheStyle: BreatheStyle?
+  @Field var wiggleAxis: WiggleAxis?
+  @Field var wiggleRotation: RotationDirection?
+  @Field var wiggleCustomAngle: Double?
 
   @available(iOS 17.0, tvOS 17.0, *)
   func toEffect() -> EffectAdding {
     switch type {
     case .bounce:
-      return BounceEffect(wholeSymbol: wholeSymbol, direction: direction)
+      return BounceEffect(wholeSymbol: wholeSymbol, byLayer: byLayer, direction: direction)
     case .pulse:
-      return PulseEffect(wholeSymbol: wholeSymbol)
+      return PulseEffect(wholeSymbol: wholeSymbol, byLayer: byLayer)
     case .scale:
-      return ScaleEffect(wholeSymbol: wholeSymbol, direction: direction)
+      return ScaleEffect(wholeSymbol: wholeSymbol, byLayer: byLayer, direction: direction)
+    case .replace:
+      return ReplaceEffect(
+        wholeSymbol: wholeSymbol,
+        byLayer: byLayer,
+        transition: replaceTransition,
+        useMagicReplace: useMagicReplace ?? false,
+        magicFallbackTransition: magicFallbackTransition
+      )
+    case .rotate:
+      return RotateEffect(
+        wholeSymbol: wholeSymbol,
+        byLayer: byLayer,
+        direction: rotateDirection
+      )
+    case .breathe:
+      return BreatheEffect(
+        wholeSymbol: wholeSymbol,
+        byLayer: byLayer,
+        style: breatheStyle
+      )
+    case .wiggle:
+      return WiggleEffect(
+        wholeSymbol: wholeSymbol,
+        byLayer: byLayer,
+        axis: wiggleAxis,
+        rotation: wiggleRotation,
+        customAngle: wiggleCustomAngle
+      )
     }
   }
 }
@@ -164,27 +230,27 @@ internal struct VariableColorSpec: Record {
   func toVariableEffect() -> VariableColorSymbolEffect {
     var effect: VariableColorSymbolEffect = .variableColor
 
-    if cumulative != nil {
+    if cumulative == true {
       effect = effect.cumulative
     }
 
-    if iterative != nil {
+    if iterative == true {
       effect = effect.iterative
     }
 
-    if hideInactiveLayers != nil {
+    if hideInactiveLayers == true {
       effect = effect.hideInactiveLayers
     }
 
-    if dimInactiveLayers != nil {
+    if dimInactiveLayers == true {
       effect = effect.dimInactiveLayers
     }
 
-    if reversing != nil {
+    if reversing == true {
       effect = effect.reversing
     }
 
-    if nonReversing != nil {
+    if nonReversing == true {
       effect = effect.nonReversing
     }
 

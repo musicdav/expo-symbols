@@ -41,6 +41,10 @@ public class SymbolModule: Module {
         view.animationSpec = spec
       }
 
+      Prop("variableValue") { (view, value: Double?) in
+        view.variableValue = value
+      }
+
       OnViewDidUpdateProps { view in
         view.reloadSymbol()
       }

@@ -47,6 +47,11 @@ export type SymbolViewProps = {
    * The animation configuration to apply to the symbol.
    */
   animationSpec?: AnimationSpec;
+  /**
+   * Controls how far a variable symbol has progressed in its drawing cycle.
+   * This value must be between `0` (no progress) and `1` (completed).
+   */
+  variableValue?: number;
 } & ViewProps;
 
 /**
@@ -63,6 +68,7 @@ export interface NativeSymbolViewProps extends ViewProps {
   tint: ProcessedColorValue | null | undefined;
   resizeMode?: ContentMode;
   animationSpec?: AnimationSpec;
+  variableValue?: number;
 }
 
 /**
@@ -143,12 +149,56 @@ export type AnimationEffect = {
    * The direction of the animation.
    */
   direction?: 'up' | 'down';
+  /**
+   * Applies the animation to individual layers even when `wholeSymbol` is `false`.
+   */
+  byLayer?: boolean;
+  /**
+   * Controls the transition used for `replace` effects.
+   */
+  replaceTransition?: ReplaceTransition;
+  /**
+   * Enables the `magic replace` variant. Requires iOS 18+.
+   */
+  useMagicReplace?: boolean;
+  /**
+   * Selects the fallback transition when using magic replace.
+   */
+  magicFallbackTransition?: ReplaceTransition;
+  /**
+   * Controls which way the symbol rotates.
+   */
+  rotateDirection?: RotationDirection;
+  /**
+   * Selects between the `plain` and `pulse` breathe animations.
+   */
+  breatheStyle?: BreatheStyle;
+  /**
+   * Determines the axis for the wiggle animation. Combine with `wiggleRotation` for rotational wiggles.
+   */
+  wiggleAxis?: WiggleAxis;
+  /**
+   * Specifies a rotational wiggle direction.
+   */
+  wiggleRotation?: RotationDirection;
+  /**
+   * Supplies a custom angle in degrees when using a custom wiggle.
+   */
+  wiggleCustomAngle?: number;
 };
 
 /**
  * The type of animation to apply to the symbol.
  */
-export type AnimationType = 'bounce' | 'pulse' | 'scale';
+export type AnimationType = 'bounce' | 'pulse' | 'scale' | 'replace' | 'rotate' | 'breathe' | 'wiggle';
+
+export type ReplaceTransition = 'downUp' | 'offUp' | 'upUp';
+
+export type RotationDirection = 'clockwise' | 'counterClockwise';
+
+export type BreatheStyle = 'plain' | 'pulse';
+
+export type WiggleAxis = 'up' | 'down' | 'left' | 'right' | 'forward' | 'backward';
 
 /**
  * A variable color animation draws attention to a symbol by changing the opacity of the symbol’s layers.

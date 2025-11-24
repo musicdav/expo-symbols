@@ -13,6 +13,7 @@ class SymbolView: ExpoView {
   var animationSpec: AnimationSpec?
   var palette = [UIColor]()
   var animated = false
+  var variableValue: Double?
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
@@ -24,7 +25,17 @@ class SymbolView: ExpoView {
   }
 
   func reloadSymbol() {
-    guard let image = UIImage(systemName: name) else {
+    let image: UIImage?
+    
+    if let variableValue = variableValue {
+      // 传入了 variableValue，使用可变值 API
+      image = UIImage(systemName: name, variableValue: min(1.0, max(0.0, variableValue)))
+    } else {
+      // 没有传入，使用普通 API
+      image = UIImage(systemName: name)
+    }
+    
+    guard let image = image else {
       return
     }
     imageView.image = image
