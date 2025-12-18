@@ -178,7 +178,7 @@ internal struct AnimationEffect: Record {
   @Field var wiggleCustomAngle: Double?
 
   @available(iOS 17.0, tvOS 17.0, *)
-  func toEffect() -> EffectAdding {
+  func toEffect() -> EffectAdding? {
     switch type {
     case .bounce:
       return BounceEffect(wholeSymbol: wholeSymbol, byLayer: byLayer, direction: direction)
@@ -187,34 +187,79 @@ internal struct AnimationEffect: Record {
     case .scale:
       return ScaleEffect(wholeSymbol: wholeSymbol, byLayer: byLayer, direction: direction)
     case .replace:
-      return ReplaceEffect(
-        wholeSymbol: wholeSymbol,
-        byLayer: byLayer,
-        transition: replaceTransition,
-        useMagicReplace: useMagicReplace ?? false,
-        magicFallbackTransition: magicFallbackTransition
-      )
+      return nil
     case .rotate:
-      return RotateEffect(
-        wholeSymbol: wholeSymbol,
-        byLayer: byLayer,
-        direction: rotateDirection
-      )
+      if #available(iOS 18.0, tvOS 18.0, *) {
+        return RotateEffect(
+          wholeSymbol: wholeSymbol,
+          byLayer: byLayer,
+          direction: rotateDirection
+        )
+      }
+      return nil
     case .breathe:
-      return BreatheEffect(
-        wholeSymbol: wholeSymbol,
-        byLayer: byLayer,
-        style: breatheStyle
-      )
+      if #available(iOS 18.0, tvOS 18.0, *) {
+        return BreatheEffect(
+          wholeSymbol: wholeSymbol,
+          byLayer: byLayer,
+          style: breatheStyle
+        )
+      }
+      return nil
     case .wiggle:
-      return WiggleEffect(
-        wholeSymbol: wholeSymbol,
-        byLayer: byLayer,
-        axis: wiggleAxis,
-        rotation: wiggleRotation,
-        customAngle: wiggleCustomAngle
-      )
+      if #available(iOS 18.0, tvOS 18.0, *) {
+        return WiggleEffect(
+          wholeSymbol: wholeSymbol,
+          byLayer: byLayer,
+          axis: wiggleAxis,
+          rotation: wiggleRotation,
+          customAngle: wiggleCustomAngle
+        )
+      }
+      return nil
     }
+  }
+
+  @available(iOS 17.0, tvOS 17.0, *)
+  func toContentTransitionEffect() -> (any SymbolEffect & ContentTransitionSymbolEffect)? {
+    guard type == .replace else {
+      return nil
+    }
+
+    func applyScope(_ effect: ReplaceSymbolEffect) -> ReplaceSymbolEffect {
+      var scopedEffect = effect
+      if byLayer ?? false {
+        scopedEffect = scopedEffect.byLayer
+      } else if wholeSymbol ?? false {
+        scopedEffect = scopedEffect.wholeSymbol
+      }
+      return scopedEffect
+    }
+
+    func configuredEffect(for transition: ReplaceTransition) -> ReplaceSymbolEffect {
+      var effect: ReplaceSymbolEffect = .replace
+      switch transition {
+      case .downUp:
+        effect = effect.downUp
+      case .offUp:
+        effect = effect.offUp
+      case .upUp:
+        effect = effect.upUp
+      }
+      return applyScope(effect)
+    }
+
+    let defaultTransition: ReplaceTransition = .downUp
+    let transitionEffect = configuredEffect(for: replaceTransition ?? defaultTransition)
+
+    if useMagicReplace ?? false, #available(iOS 18.0, tvOS 18.0, *) {
+      let fallbackTransition = magicFallbackTransition ?? replaceTransition ?? defaultTransition
+      let fallbackEffect = configuredEffect(for: fallbackTransition)
+      let magicBase = applyScope(.replace)
+      return magicBase.magic(fallback: fallbackEffect)
+    }
+
+    return transitionEffect
   }
 }
 

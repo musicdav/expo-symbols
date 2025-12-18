@@ -38,27 +38,30 @@ class SymbolView: ExpoView {
     guard let image = image else {
       return
     }
-    imageView.image = image
     imageView.contentMode = imageContentMode
     imageView.preferredSymbolConfiguration = getSymbolConfig()
 
-    if let tint {
-      if symbolType != .hierarchical {
-        imageView.image = image.withTintColor(tint, renderingMode: .alwaysOriginal)
-      }
+    let finalImage: UIImage
+    if let tint, symbolType != .hierarchical {
+      finalImage = image.withTintColor(tint, renderingMode: .alwaysOriginal)
+    } else {
+      finalImage = image
     }
 
     // Effects need to be added last
     if #available(iOS 17.0, tvOS 17.0, *) {
       imageView.removeAllSymbolEffects()
       if animated {
-        addSymbolEffects()
+        addSymbolEffects(using: finalImage)
+        return
       }
     }
+
+    imageView.image = finalImage
   }
 
   @available(iOS 17.0, tvOS 17.0, *)
-  private func addSymbolEffects() {
+  private func addSymbolEffects(using image: UIImage) {
     if let animationSpec {
       let repeating = animationSpec.repeating ?? false
       var options: SymbolEffectOptions = repeating ? .repeating : .nonRepeating
@@ -71,14 +74,23 @@ class SymbolView: ExpoView {
         options = options.speed(speed)
       }
 
+      if let contentTransition = animationSpec.effect?.toContentTransitionEffect() {
+        imageView.setSymbolImage(image, contentTransition: contentTransition, options: options)
+        return
+      }
+
+      imageView.image = image
+
       if let variableAnimationSpec = animationSpec.variableAnimationSpec {
         imageView.addSymbolEffect(variableAnimationSpec.toVariableEffect())
         return
       }
 
-      if let animation = animationSpec.effect {
-        animation.toEffect().add(to: imageView, with: options)
+      if let animation = animationSpec.effect, let effect = animation.toEffect() {
+        effect.add(to: imageView, with: options)
       }
+    } else {
+      imageView.image = image
     }
   }
 

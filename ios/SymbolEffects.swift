@@ -81,49 +81,7 @@ internal struct ScaleEffect: EffectAdding {
   }
 }
 
-@available(iOS 17.0, tvOS 17.0, *)
-internal struct ReplaceEffect: EffectAdding {
-  private let defaultTransition: ReplaceTransition = .downUp
-  let wholeSymbol: Bool?
-  let byLayer: Bool?
-  let transition: ReplaceTransition?
-  let useMagicReplace: Bool
-  let magicFallbackTransition: ReplaceTransition?
-
-  func add(to view: UIImageView, with options: SymbolEffectOptions) {
-    if useMagicReplace, #available(iOS 18.0, tvOS 18.0, *) {
-      let fallbackEffect = configuredEffect(for: magicFallbackTransition ?? transition ?? defaultTransition)
-      let magicEffect = ReplaceSymbolEffect.magic(fallback: fallbackEffect)
-      view.addSymbolEffect(magicEffect, options: options, animated: true)
-      return
-    }
-
-    let finalEffect = configuredEffect(for: transition ?? defaultTransition)
-    view.addSymbolEffect(finalEffect, options: options, animated: true)
-  }
-
-  private func configuredEffect(for transition: ReplaceTransition) -> ReplaceSymbolEffect {
-    var effect: ReplaceSymbolEffect
-    switch transition {
-    case .downUp:
-      effect = .downUp
-    case .offUp:
-      effect = .offUp
-    case .upUp:
-      effect = .upUp
-    }
-
-    if byLayer ?? false {
-      effect = effect.byLayer
-    } else if wholeSymbol ?? false {
-      effect = effect.wholeSymbol
-    }
-
-    return effect
-  }
-}
-
-@available(iOS 17.0, tvOS 17.0, *)
+@available(iOS 18.0, tvOS 18.0, *)
 internal struct RotateEffect: EffectAdding {
   private let effect: RotateSymbolEffect = .rotate
   let wholeSymbol: Bool?
@@ -156,7 +114,7 @@ internal struct RotateEffect: EffectAdding {
   }
 }
 
-@available(iOS 17.0, tvOS 17.0, *)
+@available(iOS 18.0, tvOS 18.0, *)
 internal struct BreatheEffect: EffectAdding {
   private let effect: BreatheSymbolEffect = .breathe
   let wholeSymbol: Bool?
@@ -189,7 +147,7 @@ internal struct BreatheEffect: EffectAdding {
   }
 }
 
-@available(iOS 17.0, tvOS 17.0, *)
+@available(iOS 18.0, tvOS 18.0, *)
 internal struct WiggleEffect: EffectAdding {
   private let effect: WiggleSymbolEffect = .wiggle
   let wholeSymbol: Bool?
